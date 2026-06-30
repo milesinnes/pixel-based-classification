@@ -1,7 +1,17 @@
 # Script for classifying pixels as vegetation vs. multiple background classes.
 # The script uses annotated photos (labelme) to train a RandomForest classification model.
 # Instructions: Add training folder (.json), validation folder (unbiased images), batch folder, and output folder. Tweak model features as needed.
-# Miles Innes. February 24, 2026. Script created with the help of Google AI.
+# Miles Innes. February 24, 2026.
+
+### NOTE #################################
+# After preprocessing (Quad_ImagePrep.py) imagery, examples of cover classes must be annotated to provide the supervised model with 'truths'.
+# This can be performed in the labelme Python Gui (install in terminal with 'pip install labelme'; open in terminal with 'labelme')
+# Annotate classes of interest (using lines and polygons) across a training set of imagery. Not every class needs to be present in each image.
+# I use up to 20 annotations per class. Save annotations as .json files in the same folder as training imagery.
+##########################################
+
+
+
 
 ### Imports ############################################################################################################
 import os, cv2, json, glob
@@ -25,16 +35,15 @@ from tqdm import tqdm
 
 ### Define Directories #################################################################################################
 ### Image-Level Split Validation (60 images for training, 15 for testing ONLY) ###
+### This is the preferred method if enough 
 # Training Images (60 Annotated)
-#TRAIN_DIR = r"C:\Users\milesinn\Desktop\Miles Innes\Projects\MS Thesis\Field Work\Photos\High Resolution\Combined_Train_MR"
+# TRAIN_DIR = ""
 # Validation Images (15 Annotated)
-#VAL_DIR = r"C:\Users\milesinn\Desktop\Miles Innes\Projects\MS Thesis\Field Work\Photos\High Resolution\Combined_Validation_MR"
+# VAL_DIR = ""
 
 ### 5-Fold Validation Testing (Train on all 75 images with 5-fold split, less robust against spatial autocorrelation ###
 # AP Photos Input
-#AP_INPUT = r"C:\Users\milesinn\Desktop\Miles Innes\Projects\MS Thesis\Field Work\Photos\Combined_AP_Input"
-#AP_INPUT = r"C:\Users\milesinn\Desktop\Miles Innes\Projects\MS Thesis\Field Work\Photos\High Resolution\AP_In_Test"
-#AP_INPUT = r"C:\Users\milesinn\Desktop\Miles Innes\Projects\MS Thesis\Field Work\Photos\AP_In_Test"
+#AP_INPUT = ""
 
 # AP Photos Output
 #AP_OUTPUT = r"C:\Users\milesinn\Desktop\Miles Innes\Projects\MS Thesis\Field Work\Photos\ComE"
