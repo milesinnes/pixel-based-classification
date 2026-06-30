@@ -1,16 +1,16 @@
 # Script for pre-processing quadrat photos for pixel analysis.
-# Off-nadar and non-centered images are cropped to a square and selected corners and distorted (perspective).
+# Off-nadir and non-centered images are cropped to a square and selected corners and distorted (perspective).
 # Instructions: Configure photo input/output folders. Click internal quadrat corners (clockwise) starting at top-left. Repeat.
-# Miles Innes. February 17, 2026. Script created with the help of Google AI.
+# Miles Innes. February 17, 2026.
 
 ### Imports
 import cv2
 import numpy as np
 import os
 
-### Configuration
-INPUT_FOLDER = 'C:/Users/milesinn/Desktop/Miles Innes/Projects/MS Thesis/Field Work/Photos/2025'
-OUTPUT_FOLDER = 'C:/Users/milesinn/Desktop/Miles Innes/Projects/MS Thesis/Field Work/Photos/2025 Processed'
+### Configuration (ADD FILE PATHS)
+INPUT_FOLDER = '' # Add path to unprocessed photos
+OUTPUT_FOLDER = '' # Add output folder location for cropped and transformed photos
 OUTPUT_SIZE = 1000  # Pixels for the final square (e.g., 1000x1000)
 
 ### Confirm file path
@@ -70,8 +70,8 @@ for img_name in images:
     ])
 
     # Calculate transformation and warp
-    matrix = cv2.getPerspectiveTransform(src_pts, dst_pts)
-    warped = cv2.warpPerspective(img, matrix, (OUTPUT_SIZE, OUTPUT_SIZE))
+    matrix = cv2.getPerspectiveTransform(src_pts, dst_pts) # Defines output matrix
+    warped = cv2.warpPerspective(img, matrix, (OUTPUT_SIZE, OUTPUT_SIZE)) # Perform warp transformation (make nadir)
 
     # Save output
     cv2.imwrite(os.path.join(OUTPUT_FOLDER, f"{img_name}"), warped)
