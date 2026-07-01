@@ -43,8 +43,9 @@ from tqdm import tqdm
 
 ### 5-Fold Validation Testing (Train on all 75 images with 5-fold split, less robust against spatial autocorrelation ###
 # Output Photos
-TRAIN_DIR = ""
-TEST_DIR = ""
+TRAIN_DIR = "" # Path to training images w/ JSON annotations
+CLASS_INPUT = "" # Photos to classify
+CLASS_OUTPUT = "" # Path for exporting classification maps + Stats
 EXPORT_DIR = "" # Path for exporting graphs
 
 # Set seeds
@@ -179,8 +180,9 @@ def run_random_5fold(X, y):
 ##############################
 ### WITH GRAPHS
 def run_random_5fold(X, y):
-    kf = KFold(n_splits=5, shuffle=True, random_state=99)
+    kf = KFold(n_splits=5, shuffle=True, random_state=99) ### Define number of folds
 
+    # Lists for stacking the performances of each fold
     fold_accuracies = []
     fold_r2 = []
     all_importances = []
@@ -197,8 +199,8 @@ def run_random_5fold(X, y):
         X_train, X_val = X[train_idx], X[val_idx]
         y_train, y_val = y[train_idx], y[val_idx]
 
-        rf = RandomForestClassifier(
-            n_estimators=150,
+        rf = RandomForestClassifier( ### Parameterize RF model here
+            n_estimators=150, # Number of trees
             n_jobs=-1,
             random_state=99
         )
@@ -231,7 +233,7 @@ def run_random_5fold(X, y):
     # Ensure export directory exists
     os.makedirs(EXPORT_DIR, exist_ok=True)
 
-    # Global ggplot-style font settings (Arial/Helvetica matching R)
+    # Global font settings
     plt.rcParams['font.family'] = 'sans-serif'
     plt.rcParams['font.sans-serif'] = ['Arial', 'Helvetica', 'Liberation Sans']
     plt.rcParams['text.color'] = '#333333'
@@ -240,7 +242,7 @@ def run_random_5fold(X, y):
     plt.rcParams['ytick.color'] = '#333333'
 
     # ==========================================
-    # 1. GENERATE MEAN FEATURE IMPORTANCE PLOT (theme_bw style)
+    # 1. GENERATE MEAN FEATURE IMPORTANCE PLOT
     # ==========================================
     mean_importances = np.mean(all_importances, axis=0)
     std_importances = np.std(all_importances, axis=0)
@@ -277,7 +279,7 @@ def run_random_5fold(X, y):
     print(f"Saved: {importance_path}")
 
     # ==========================================
-    # 2. GENERATE CONFUSION MATRIX HEATMAP (theme_bw style)
+    # 2. GENERATE CONFUSION MATRIX HEATMAP
     # ==========================================
     cm_normalized = combined_conf_matrix.astype('float') / combined_conf_matrix.sum(axis=1)[:, np.newaxis]
 
@@ -336,6 +338,10 @@ def run_random_5fold(X, y):
     return rf
 
 
+
+
+########################################################################################################################
+########################################################################################################################
 ### Model Feature Extraction ###########################################################################################
 # Define Model Features
 def extract_features(img):
@@ -348,8 +354,7 @@ def extract_features(img):
 
 
     ### --- CLAHE SETUP --- ###########################################################
-    #clahe = cv2.createCLAHE(clipLimit=4, tileGridSize=(12, 12))
-
+    #clahe = cv2.createCLAHE(clipLimit=4, tileGridSize=(12, 12)) # Histogram normalization of lightness
     #img = (img - img.mean()) / img.std()
 
 
@@ -364,13 +369,12 @@ def extract_features(img):
 
     ##### LAB (Primary Color Space)
     #lab = cv2.cvtColor(img, cv2.COLOR_BGR2LAB).astype(np.float32)
-    lab = rgb2lab(img).astype(np.float32)
+    lab = rgb2lab(img).astype(np.float32) # Transform RGB to LAB color space
     #lch = lab2lch(lab).astype(np.float32)
     #L, C, H = lch[:, :, 0], lch[:, :, 1], lch[:, :, 2]
     L, A, B = lab[:,:,0], lab[:,:,1], lab[:,:,2]
-    Ln = (L - L.mean()) / L.std()
-
-    #Chroma = np.sqrt((A) ** 2 + (B) ** 2)
+    Ln = (L - L.mean()) / L.std() # Z-Normalize L
+    #Chroma = np.sqrt((A) ** 2 + (B) ** 2) # Chroma (Color Intensity)
     #L_CLAHE = clahe.apply(L.astype(np.uint8)).astype(np.float32)
 
     # LAB Bilateral Blurs
@@ -409,10 +413,10 @@ def extract_features(img):
     #b_n = (b_n / total)
 
     # RGB Spectral Indices
-    #exg = (2 * g_n - r_n - b_n)
+    # exg = (2 * g_n - r_n - b_n)
     # exr = ((1.4 * r_n) - g_n)
     # exgr = exg - exr
-    #sci = ((r_n - b_n) / (r_n + b_n + 1e-6))
+    # sci = ((r_n - b_n) / (r_n + b_n + 1e-6))
     # vari = (g_n-r_n)/(g_n+r_n-b_n + 1e-6)
 
 
@@ -429,15 +433,10 @@ def extract_features(img):
     #scharr_x = cv2.Scharr(L, cv2.CV_32F, 1, 0)
     #scharr_y = cv2.Scharr(L, cv2.CV_32F, 0, 1)
     #scharr_mag = np.sqrt(scharr_x ** 2 + scharr_y ** 2)
-    #scharr_angle = np.arctan2(scharr_y, scharr_x).astype(np.float32)
     #scharr_A = scharr(A)
     #scharr_B = scharr(B)
     #scharr_L = scharr(L)
-    #laplace_L = laplace(L)
-    #laplace_Ln = cv2.normalize(laplace_L, None, 0, 255, cv2.NORM_MINMAX)
-    #scharr_L_GB = cv2.GaussianBlur(scharr_L, ksize=(0,0), sigmaX=2)
-    #laplace_L_GB = cv2.GaussianBlur(scharr_L, ksize=(0, 0), sigmaX=5)
-    #scharr_gb = cv2.GaussianBlur(scharr_mag, ksize=(0,0), sigmaX=1)
+   
 
 
     # Structure Tensor ####################################
@@ -449,17 +448,7 @@ def extract_features(img):
         return coherence, anisotropy
 
     TC_1, TA_1 = extract_structure_features(L.astype(np.float32), sigma=1)
-    #TC_2, TA_2 = extract_structure_features(L.astype(np.float32), sigma=2)
-    #TC_2, TA_2 = extract_structure_features(L.astype(np.float32), sigma=1.5)
-    #coherence2, ani2 = extract_structure_features(L_CLAHE.astype(np.float32), sigma=1.5)
-    #coherence3, ani3 = extract_structure_features(L_CLAHE.astype(np.float32), sigma=2)
-    #coherence2= extract_structure_features(A.astype(np.float32), sigma=0.5)
-    #coherence3= extract_structure_features(B.astype(np.float32), sigma=0.5)
-    #l1_sig3, l2_sig3, coherence_sig3 = extract_structure_features(L_CLAHE.astype(np.float32), sigma=3)
-    #l1 = np.max(np.stack([l1_sig1, l1_sig2, l1_sig3], axis=0), axis=0)
-    #l2 = np.max(np.stack([l2_sig1, l2_sig2, l2_sig3], axis=0), axis=0)
-    #coherence = np.max(np.stack([coherence_sig1, coherence_sig2, coherence_sig3], axis=0), axis=0)
-
+    
 
     # Hessian Matrix #######################################
     def hess_func(img, sigma):
@@ -471,16 +460,8 @@ def extract_features(img):
         anisotropy = hl1 / (hl2 + 1e-6)
         return coherence, anisotropy
 
-    #HC_05, HA_05, HR_05 = hess_func(L_CLAHE.astype(np.float32), sigma=0.5)
     HC_1, HA_1 = hess_func(L.astype(np.float32), sigma=1)
-    #HC_2, HA_2 = hess_func(L.astype(np.float32), sigma=2)
-    #HC_2, HA_2 = hess_func(L.astype(np.float32), sigma=1.5)
-    #HC_A, HA_A = hess_func(A.astype(np.float32), sigma=1)
-    #HC_B, HA_B = hess_func(B.astype(np.float32), sigma=1)
-    #ridge_c = hess_func(L_CLAHE.astype(np.float32), sigma=1.5)
-    #ridge_d = hess_func(L_CLAHE.astype(np.float32), sigma=2.0)
-    #ridge_d, blob_d, flatness_d = hess_func(L_CLAHE.astype(np.float32), sigma=6.0)
-    #ridge_e, blob_e, flatness_e = hess_func(L_CLAHE.astype(np.float32), sigma=12.0)
+
 
 
     # Circular Variance Equation #################################
@@ -506,25 +487,25 @@ def extract_features(img):
     #edge_variance = cv2.blur(scharr_L ** 2, (11, 11)) - cv2.blur(scharr_L, (11, 11)) ** 2
 
     ### Distance Transform
-    def extract_distance_transform(img):
-        _, thresh = cv2.threshold(img, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
-        inv_otsu_edges = cv2.bitwise_not(thresh)
-        dist_map = cv2.distanceTransform(inv_otsu_edges, cv2.DIST_L2, 3)
-        return dist_map.astype(np.float32)
+    #def extract_distance_transform(img):
+        #_, thresh = cv2.threshold(img, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+        #inv_otsu_edges = cv2.bitwise_not(thresh)
+        #dist_map = cv2.distanceTransform(inv_otsu_edges, cv2.DIST_L2, 3)
+        #return dist_map.astype(np.float32)
 
     #dist = extract_distance_transform(L.astype(np.uint8))
     #distb = cv2.GaussianBlur(dist, ksize=(0, 0), sigmaX=3)
 
 
     ### Local Statistics (Mean / Std / Coefficient of Variation) #####################
-    def local_stats(channel, sigma):
-        ch = channel.astype(np.float32)
-        local_mean = cv2.GaussianBlur(ch, (0, 0), sigma)
-        local_mean2 = cv2.GaussianBlur(ch ** 2, (0, 0), sigma)
-        local_var = np.maximum(local_mean2 - local_mean ** 2, 0)
-        local_std = np.sqrt(local_var)
-        cov = local_std / (local_mean + 1e-6)
-        return local_mean, local_var, cov
+    #def local_stats(channel, sigma):
+        #ch = channel.astype(np.float32)
+        #local_mean = cv2.GaussianBlur(ch, (0, 0), sigma)
+        #local_mean2 = cv2.GaussianBlur(ch ** 2, (0, 0), sigma)
+        #local_var = np.maximum(local_mean2 - local_mean ** 2, 0)
+        #local_std = np.sqrt(local_var)
+        #cov = local_std / (local_mean + 1e-6)
+        #return local_mean, local_var, cov
 
     #mean_l, var_l, cov_l = local_stats(L, 3)
     #mean_A, std_A, cov_A = local_stats(A, 1)
@@ -567,6 +548,7 @@ feature_names = [
 ]
 
 ### PROCESS IMAGERY ###################################################################################################
+### Extract features at each image
 def process_directory(directory, SAMPLES_PER_CLASS):
     X_list, y_list = [], []
     json_files = [f for f in os.listdir(directory) if f.endswith(".json")]
@@ -640,7 +622,7 @@ def process_directory(directory, SAMPLES_PER_CLASS):
 
 
 ### Train Model ######################################################################################################
-
+### Complete Train / Classify Split (Ideal if lots of data available
 ### MODEL FOR IMAGE LEVEL 80/20 SPLIT. USE PIXEL LEVEL SPLIT (BELOW)
 '''
 # 3. Train Model
@@ -689,7 +671,7 @@ print(f"\nTest R-squared score: {r2:.3f}")
 
 
 ### PIXEL-LEVEL 80/20 SPLIT WITH 5-FOLD VALIDATION #####################################################################
-X_train, y_train = process_directory(TEST_DIR, SAMPLES_PER_CLASS=100000) # Define the number of training pixels per class
+X_train, y_train = process_directory(TRAIN_DIR, SAMPLES_PER_CLASS=100000) # Define the number of training pixels per class
 
 # --- 3. CALL THE CROSS-VALIDATION HERE ---
 print("Starting Thesis Validation...")
@@ -707,10 +689,10 @@ for i, idx in enumerate(indices):
 ### Batch Predict Photos ###############################################################################################
 '''
 stats = []
-print(f"Processing images in {AP_INPUT}...")
+print(f"Processing images in {CLASS_INPUT}...")
 
 # 1. Get the list of images first so tqdm knows the total count
-image_list = glob.glob(os.path.join(AP_INPUT, "*.jpg"))
+image_list = glob.glob(os.path.join(CLASS_INPUT, "*.jpg"))
 
 # 2. Wrap the list in tqdm for the progress bar
 for img_path in tqdm(image_list, desc="Batch Predicting", unit="img"):
@@ -751,11 +733,11 @@ for img_path in tqdm(image_list, desc="Batch Predicting", unit="img"):
         vis_mask[preds == class_id] = bgr_color
 
     # Save the cleaned color map
-    cv2.imwrite(os.path.join(AP_OUTPUT, os.path.basename(img_path)), vis_mask)
+    cv2.imwrite(os.path.join(CLASS_OUTPUT, os.path.basename(img_path)), vis_mask)
 
 ### Export Prediction CSV ####################
 df = pd.DataFrame(stats)
-df.to_csv(os.path.join(AP_OUTPUT, "MSR_MultiClass_Predictions.csv"), index=False)
+df.to_csv(os.path.join(CLASS_OUTPUT, "MSR_MultiClass_Predictions.csv"), index=False)
 
-print(f"\n Processed {len(stats)} images. Results saved to {AP_OUTPUT}")
+print(f"\n Processed {len(stats)} images. Results saved to {CLASS_OUTPUT}")
 '''
