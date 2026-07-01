@@ -35,23 +35,17 @@ from tqdm import tqdm
 
 ### Define Directories #################################################################################################
 ### Image-Level Split Validation (60 images for training, 15 for testing ONLY) ###
-### This is the preferred method if enough 
+### This is the preferred method if enough annotated imagery is available
 # Training Images (60 Annotated)
 # TRAIN_DIR = ""
 # Validation Images (15 Annotated)
 # VAL_DIR = ""
 
 ### 5-Fold Validation Testing (Train on all 75 images with 5-fold split, less robust against spatial autocorrelation ###
-# AP Photos Input
-#AP_INPUT = ""
-
-# AP Photos Output
-#AP_OUTPUT = r"C:\Users\milesinn\Desktop\Miles Innes\Projects\MS Thesis\Field Work\Photos\ComE"
-#AP_OUTPUT = r"C:\Users\milesinn\Desktop\Miles Innes\Projects\MS Thesis\Field Work\Photos\High Resolution\AP_Out_Test"
-#AP_OUTPUT = r"C:\Users\milesinn\Desktop\Miles Innes\Projects\MS Thesis\Field Work\Photos\AP_Out_Test"
-#TEST_DIR = r"C:\Users\milesinn\Desktop\Miles Innes\Projects\MS Thesis\Field Work\Photos\High Resolution\Combined_5Fold_MR"
-TEST_DIR = r"C:\Users\milesinn\Desktop\Miles Innes\Projects\MS Thesis\Field Work\Photos\Combined_5Fold"
-EXPORT_DIR = r"C:\Users\milesinn\Desktop\Miles Innes\Projects\MS Thesis\Figures\Paper"
+# Output Photos
+TRAIN_DIR = ""
+TEST_DIR = ""
+EXPORT_DIR = "" # Path for exporting graphs
 
 # Set seeds
 np.random.seed(99)
@@ -59,26 +53,27 @@ random.seed(99)
 
 
 ### Assign Categorical Features (Burn Status & Sampling Date) *** UNUSED *** ###########################################
-BURNED_UNITS = ["BCE", "BCW", "BH", "BL", "EC", "JW", "KC", "MM", "UE"]
-UNBURNED_UNITS = ["BHU", "BTU", "ECU", "KCU", "SC"]
-UNIT_MAP = {unit: i for i, unit in enumerate(['BCE', 'BCW', 'BH', 'BL', 'EC', 'JW', 'KC', 'MM', 'UE', 'BHU', 'BTU', 'ECU', 'KCU', 'SC'])}
+### These are for image-scale categorical mapping. Over generalizes cover in each unit and therefore not recommended
+#BURNED_UNITS = ["BCE", "BCW", "BH", "BL", "EC", "JW", "KC", "MM", "UE"]
+#UNBURNED_UNITS = ["BHU", "BTU", "ECU", "KCU", "SC"]
+#UNIT_MAP = {unit: i for i, unit in enumerate(['BCE', 'BCW', 'BH', 'BL', 'EC', 'JW', 'KC', 'MM', 'UE', 'BHU', 'BTU', 'ECU', 'KCU', 'SC'])}
 
 # Extract Unit ID / Sampling Date / Burn Status from image name
-def parse_metadata(filename):
+#def parse_metadata(filename):
     # 1. Extract Unit
-    unit_str = filename.split('_')[0]
-    unit_id = UNIT_MAP.get(unit_str, -1)  # Returns -1 if unit isn't in our list
-    is_burned = 1 if unit_str in BURNED_UNITS else 0
+    #unit_str = filename.split('_')[0]
+    #unit_id = UNIT_MAP.get(unit_str, -1)  # Returns -1 if unit isn't in our list
+    #is_burned = 1 if unit_str in BURNED_UNITS else 0
 
     # 2. Extract Date
-    date_str = filename.split('_')[3].split('.')[0]
-    date_obj = datetime.strptime(date_str, "%Y%m%d")
-    day = date_obj.timetuple().tm_yday  # 1-365
+    #date_str = filename.split('_')[3].split('.')[0]
+    #date_obj = datetime.strptime(date_str, "%Y%m%d")
+    #day = date_obj.timetuple().tm_yday  # 1-365
 
     #start_date = datetime(date_obj.year, 6, 25)
     #days_since_start = (date_obj - start_date).days
 
-    return is_burned, day  # Now returning 3 values
+    #return is_burned, day  # Now returning 3 values
 
 
 ### Prepare Feature Extraction #########################################################################################
@@ -122,6 +117,7 @@ LINE_THICKNESS = 2
 
 
 ### Modelling Framework (5 Fold Validation) ############################################################################
+### WITHOUT GRAPHS
 '''
 def run_random_5fold(X, y):
     """
@@ -181,7 +177,7 @@ def run_random_5fold(X, y):
     '''
 
 ##############################
-# RF (WITH GRAPHS)
+### WITH GRAPHS
 def run_random_5fold(X, y):
     kf = KFold(n_splits=5, shuffle=True, random_state=99)
 
